@@ -714,7 +714,7 @@
     </style>
 
     <script>
-        /* CẤU HÌNH ĐÃ ĐƯỢC TÙY CHỈNH THEO THEME MEME "MAX THE HERO" */
+        /* CẤU HÌNH ĐÃ ĐƯỢC TÙY CHỈNH THEO THEME MEME "THE BLACK BULL" */
         window.TROLLPUMP_CONFIG = {
             runtimeVersion: "3.2.0-max-edition",
 
@@ -739,12 +739,12 @@
             preloadSponsorStats: true,
 
             offers: [{
-                amount: "2500 MAX",
+                amount: "2500 BULL",
                 buttonLabel: "CLAIM 2500 $BULL",
                 unlockSeconds: 1500,
                 url: "https://join.pump.fun/HSag/3ziw67gt"
             }, {
-                amount: "6000 MAX",
+                amount: "6000 BULL",
                 buttonLabel: "CLAIM 6000 $BULL",
                 unlockSeconds: 3600,
                 url: "https://join.pump.fun/HSag/3ziw67gt"
@@ -771,12 +771,12 @@
                     button: "NHẬN 2500 $BULL"
                 },
                 "5": {
-                    title: "🎖️ ANH HÙNG MAX REPORT",
+                    title: "🎖️ CHIẾN THẮNG",
                     reward: "",
                     showIdLabel: true,
                     locationMode: "compact",
                     sections: [
-                        "Hồ sơ:\nChiến sĩ gác cổng tin cậy",
+                        "Hồ sơ:\nMột người nhảy tin cậy",
                         "Hạng thưởng:\n6000 $BULL",
                         "Trạng thái:\nĐã hoàn thành 60 phút nhảy cùng Black Bull"
                     ],
@@ -792,7 +792,7 @@
             locationApiUrl: "https://ipapi.co/json/",
 
             sponsors: [{
-                title: "🔥 FEATURED HERO TOKEN 🔥",
+                title: "🔥 THE BLACK BULL TOKEN 🔥",
                 name: "$BULL",
                 message: "LEAL • VALIENTE • FIEL",
                 cta: "XEM $BULL TOKEN",
@@ -837,7 +837,7 @@
                 "HOW IT WORKS": "Theo chân chú chó MAX nhảy cùng Black Bull stream.\nCác mốc phần thưởng sẽ tự động mở khóa theo thời gian.",
                 "MY REWARD": "Phần thưởng nhảy cùng Black Bull:\n13p = 1000 $BULL\n25p = 2500 $BULL\n60p = 6000 $BULL",
                 "DAILY SESSIONS": "Giới hạn nhiệm vụ:\n5 ca trực mỗi ngày cho mỗi tài khoản.",
-                "INVITE A FRIEND": "Mời đồng đội cùng tham gia đội nhảy cùng Black Bull của MAX!",
+                "INVITE A FRIEND": "Mời đồng đội cùng tham gia đội nhảy cùng Black Bull!",
                 "SESSION STATUS": "Trạng thái nhảy cùng Black Bull:\nĐANG HOẠT ĐỘNG (ACTIVE)",
                 "PAUSE": "Có thể tạm dừng stream.\nĐồng hồ đếm ngược thưởng vẫn chạy ngầm.",
                 "REWARD RULES": "Đảm bảo xem đủ thời gian để nhận thưởng $BULL hợp lệ."
@@ -864,9 +864,9 @@
                 <button class="troll-btn">SESSION STATUS</button>
                 <button class="troll-btn">PAUSE</button>
                 <button class="troll-btn">REWARD RULES</button>
-                <button class="troll-btn" id="claimBtn" data-action="CLAIM 1000 MAX" disabled>🔒 13m 00s</button>
-                <button class="troll-btn" id="claim3Btn" data-action="CLAIM 2500 MAX" disabled>🔒 25m 00s</button>
-                <button class="troll-btn" id="claim5Btn" data-action="CLAIM 6000 MAX" disabled>🔒 60m 00s</button>
+                <button class="troll-btn" id="claimBtn" data-action="CLAIM 1000 BULL" disabled>🔒 13m 00s</button>
+                <button class="troll-btn" id="claim3Btn" data-action="CLAIM 2500 BULL" disabled>🔒 25m 00s</button>
+                <button class="troll-btn" id="claim5Btn" data-action="CLAIM 6000 BULL" disabled>🔒 60m 00s</button>
             </div>
 
             <div class="tv-frame">
@@ -879,7 +879,7 @@
                     <button class="sound-toggle" id="soundToggle" type="button" aria-label="Enable sound">🔇 OFF</button>
 
                     <div class="ad-popup" id="adPopup">
-                        <div class="ad-title" id="adTitle">🐕 THE BLACK BULL SPONSOR 🐕</div>
+                        <div class="ad-title" id="adTitle">🐂 THE BLACK BULL SPONSOR 🐂</div>
                         <div class="ad-token" id="adToken">MC</div>
                         <div class="ad-message" id="adMessage">LIVE PRICE • MCAP • VOL</div>
                         <div class="ad-stats">
@@ -893,7 +893,7 @@
                     <video id="video" autoplay muted loop playsinline preload="auto"></video>
                     <audio id="bgMusic" loop preload="none"></audio>
                     <div class="scanlines"></div>
-                    <div class="mc-talk" id="mcTalk">🐕 WATCH • PATROL • EARN $BULL</div>
+                    <div class="mc-talk" id="mcTalk">🐂 WATCH • PATROL • EARN $BULL</div>
                 </div>
             </div>
 
@@ -944,7 +944,7 @@
         <div class="mad-popup" id="madPopup" role="dialog" aria-modal="true" aria-labelledby="madPopupTitle">
             <div class="mad-popup-box">
                 <img class="mad-logo" id="madLogo" src="https://i.imgur.com/vD43I9E.png" alt="MAX Hero logo">
-                <h2 id="madPopupTitle">🐕 WATCH • PATROL • EARN</h2>
+                <h2 id="madPopupTitle">🐂 WATCH • PATROL • EARN</h2>
                 <div class="mad-popup-content" id="madPopupContent"></div>
                 <div class="mad-popup-actions">
                     <button class="mad-x-btn" id="xPostBtn" type="button">SHARE ON X</button>
@@ -1209,7 +1209,7 @@
                 }
 
                 function setLoading(sponsor) {
-                    adTitle.textContent = sponsor.title || "🐕 MAX PATROL SPONSOR 🐕";
+                    adTitle.textContent = sponsor.title || "🐂 BLACK BULL PATROL SPONSOR 🐂";
                     adToken.textContent = sponsor.name || "$BULL";
                     adMessage.textContent = sponsor.message || "LIVE PRICE • MCAP • VOL";
                     adPrice.textContent = "Loading...";
@@ -1511,7 +1511,7 @@
                             parts.push(`<div class="mad-popup-proof">${escapeHtml(copy.proof)}</div>`);
                         }
 
-                        madPopupTitle.textContent = copy.title || "🐕 MAX HERO LIVE";
+                        madPopupTitle.textContent = copy.title || "🐂 BLACK BULL LIVE";
                         madPopupContent.innerHTML = parts.join("");
                         bountyBtn.textContent = copy.button || "NHẬN PHẦN THƯỞNG";
                     }
@@ -1528,7 +1528,7 @@
 
                     function buildXText() {
                         const copy = getPopupCopy(activeTier);
-                        const lines = [copy.title || "🐕 MAX HERO LIVE"];
+                        const lines = [copy.title || "🐂 BLACK BULL LIVE"];
 
                         if (copy.reward) lines.push(copy.reward);
                         if (copy.showIdLabel) lines.push("ID:");
