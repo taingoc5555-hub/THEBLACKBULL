@@ -1,0 +1,2446 @@
+<!doctype html>
+<html lang="vi">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>PopularMaxDog — Live Stream Patrol</title>
+
+    <style>
+        /* 1. Reset nền & lề cho toàn trang */
+        
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #0d1117;
+            min-height: 100vh;
+        }
+        /* 2. Khai báo biến & Style khung chứa chính */
+        
+        #trollpump-app {
+            --bg: #0d1117;
+            --card: #161b22;
+            --border: #30363d;
+            --primary: #2ee57c;
+            --yellow: #f4c95d;
+            --text: #f0f6fc;
+            --card-bg: rgba(22, 27, 34, 0.85);
+            --card-border: #30363d;
+            --text-sub: #8b949e;
+            --primary-glow: rgba(46, 229, 124, 0.35);
+            width: 100%;
+            overflow: hidden;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+        
+        #trollpump-app,
+        #trollpump-app * {
+            box-sizing: border-box;
+        }
+        
+        #trollpump-app .container {
+            width: min(100%, 850px);
+            margin: 0 auto;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        /* Countdown & Nút Troll */
+        
+        #trollpump-app .countdown {
+            text-align: center;
+            color: var(--primary);
+            font-weight: 700;
+            font-size: clamp(.75rem, 1.2vw, .95rem);
+            line-height: 1.45;
+        }
+        
+        #trollpump-app .countdown #timer {
+            color: var(--text);
+            font-weight: 800;
+            font-variant-numeric: tabular-nums;
+        }
+        
+        #trollpump-app .troll-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 6px;
+        }
+        
+        #trollpump-app .troll-btn {
+            border: none;
+            padding: 6px 12px;
+            border-radius: 8px;
+            background: #21262d;
+            color: #fff;
+            cursor: pointer;
+            font-size: clamp(.7rem, 1vw, .85rem);
+            opacity: .4;
+            pointer-events: none;
+            transition: .2s;
+        }
+        
+        #trollpump-app .troll-btn.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        #trollpump-app .troll-btn.active:hover {
+            background: var(--primary);
+            transform: translateY(-2px);
+        }
+        
+        #trollpump-app .troll-btn:disabled {
+            cursor: not-allowed;
+        }
+        /* Màn hình TV Video */
+        
+        #trollpump-app .tv-frame {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 15px;
+        }
+        
+        #trollpump-app .screen {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            overflow: hidden;
+            border-radius: 12px;
+            background: #000;
+            box-shadow: 0 0 0 1px rgba(46, 229, 124, .08), 0 18px 50px rgba(0, 0, 0, .38);
+        }
+        
+        #trollpump-app video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        #trollpump-app .sound-toggle {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 25;
+            border: 1px solid rgba(255, 255, 255, .24);
+            border-radius: 7px;
+            padding: 5px 8px;
+            background: rgba(0, 0, 0, .78);
+            color: #fff;
+            font: 800 clamp(.62rem, .9vw, .76rem)/1 system-ui, -apple-system, sans-serif;
+            letter-spacing: .02em;
+            cursor: pointer;
+            box-shadow: 0 0 12px rgba(0, 0, 0, .35);
+        }
+        
+        #trollpump-app .sound-toggle:hover,
+        #trollpump-app .sound-toggle:focus-visible {
+            background: var(--primary);
+            outline: none;
+        }
+        
+        #trollpump-app .sound-toggle.is-on {
+            border-color: rgba(69, 211, 105, .7);
+            background: rgba(18, 96, 43, .88);
+        }
+        
+        #trollpump-app .tv-overlay {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, .7);
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: clamp(.7rem, 1vw, .85rem);
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        #trollpump-app .live-dot {
+            display: inline-block;
+            width: 100px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #f00;
+            animation: tpLiveBlink 1s infinite;
+        }
+        
+        @keyframes tpLiveBlink {
+            0% {
+                opacity: 1;
+            }
+            50% {
+                opacity: .2;
+            }
+            100% {
+                opacity: 1;
+            }
+        }
+        /* Quảng cáo Pop-up nhỏ góc TV */
+        
+        #trollpump-app .ad-popup {
+            position: absolute;
+            top: 55px;
+            right: 10px;
+            width: 190px;
+            background: rgba(0, 0, 0, .92);
+            border: 1px solid rgba(46, 229, 124, .5);
+            border-radius: 10px;
+            padding: 10px;
+            z-index: 15;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: .35s;
+            pointer-events: none;
+            box-shadow: 0 0 16px rgba(46, 229, 124, .22);
+        }
+        
+        #trollpump-app .ad-popup.show {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+        
+        #trollpump-app .ad-title {
+            color: var(--yellow);
+            font-weight: 700;
+            font-size: .7rem;
+            margin-bottom: 6px;
+        }
+        
+        #trollpump-app .ad-token {
+            font-weight: 900;
+            color: #fff;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        #trollpump-app .ad-message {
+            color: #d8dee9;
+            font-size: .66rem;
+            font-weight: 700;
+            line-height: 1.3;
+            margin-bottom: 7px;
+        }
+        
+        #trollpump-app .ad-stats {
+            display: grid;
+            gap: 3px;
+            margin-bottom: 8px;
+            font-size: .7rem;
+            line-height: 1.35;
+            color: #c9d1d9;
+        }
+        
+        #trollpump-app .ad-stats-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+        }
+        
+        #trollpump-app .ad-stats-value {
+            color: #fff;
+            font-weight: 800;
+            text-align: right;
+            white-space: nowrap;
+        }
+        
+        #trollpump-app .ad-btn {
+            display: block;
+            text-align: center;
+            padding: 6px;
+            border-radius: 6px;
+            background: var(--primary);
+            color: #fff;
+            text-decoration: none;
+            font-size: .75rem;
+            font-weight: 700;
+        }
+        
+        #trollpump-app .scanlines {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            opacity: .12;
+            background: repeating-linear-gradient(transparent 0 3px, rgba(255, 255, 255, .25) 3px 4px);
+        }
+        
+        #trollpump-app .mc-talk {
+            position: absolute;
+            left: 50%;
+            bottom: 10px;
+            transform: translateX(-50%);
+            width: min(85%, 450px);
+            background: rgba(0, 0, 0, .8);
+            padding: 8px 12px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: clamp(.75rem, 1vw, .95rem);
+            white-space: pre-line;
+            z-index: 10;
+        }
+        
+        #trollpump-app .tv-label,
+        #trollpump-app .victim-count {
+            text-align: center;
+            font-size: clamp(.75rem, 1vw, .9rem);
+        }
+        
+        #trollpump-app .tv-label {
+            color: var(--primary);
+            font-weight: 700;
+        }
+        
+        #trollpump-app .victim-count {
+            color: var(--yellow);
+        }
+        /* Modal Pop-up lớn (Mad Popup) */
+        
+        #trollpump-app .mad-popup {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .88);
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+            z-index: 99999;
+        }
+        
+        #trollpump-app .mad-popup.show {
+            display: flex;
+        }
+        
+        #trollpump-app .mad-popup-box {
+            width: min(100%, 330px);
+            max-height: calc(100vh - 20px);
+            overflow-y: auto;
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 14px 16px;
+            color: #fff;
+            text-align: center;
+            box-shadow: 0 18px 60px rgba(0, 0, 0, .55);
+        }
+        
+        #trollpump-app .mad-logo {
+            width: 82px;
+            height: auto;
+            max-height: 82px;
+            object-fit: contain;
+            display: block;
+            margin: 0 auto 4px;
+            border: 0;
+            border-radius: 0;
+            background: transparent;
+            box-shadow: none;
+        }
+        
+        #trollpump-app .mad-logo[src=""] {
+            display: none;
+        }
+        
+        #trollpump-app .mad-popup-box h2 {
+            font-size: 1.28rem;
+            line-height: 1.12;
+            margin: 0 0 4px;
+        }
+        
+        #trollpump-app .mad-popup-content {
+            display: grid;
+            gap: 5px;
+            font-size: .88rem;
+            line-height: 1.22;
+        }
+        
+        #trollpump-app .mad-popup-reward {
+            font-size: 1.45rem;
+            font-weight: 900;
+            line-height: 1.05;
+            color: var(--yellow);
+            margin: 1px 0 2px;
+        }
+        
+        #trollpump-app .mad-popup-id-label,
+        #trollpump-app .mad-location-title {
+            color: #888;
+            font-size: .74rem;
+            line-height: 1.15;
+        }
+        
+        #trollpump-app .mad-popup-id {
+            color: #aaa;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            font-size: .82rem;
+            line-height: 1.15;
+        }
+        
+        #trollpump-app .mad-popup-location {
+            font-weight: 800;
+            line-height: 1.15;
+        }
+        
+        #trollpump-app .mad-popup-time {
+            color: var(--primary);
+            font-weight: 800;
+            line-height: 1.15;
+        }
+        
+        #trollpump-app .mad-popup-section {
+            white-space: pre-line;
+            line-height: 1.22;
+        }
+        
+        #trollpump-app .mad-popup-proof {
+            color: #ddd;
+            white-space: pre-line;
+            line-height: 1.22;
+            margin-top: 1px;
+        }
+        
+        #trollpump-app .mad-popup-actions {
+            display: grid;
+            gap: 5px;
+            margin-top: 8px;
+        }
+        
+        #trollpump-app .mad-x-btn,
+        #trollpump-app .mad-bounty-btn,
+        #trollpump-app .mad-close-btn {
+            width: 100%;
+            padding: 9px 10px;
+            border: none;
+            border-radius: 7px;
+            font-weight: 800;
+            font-size: .82rem;
+            line-height: 1.1;
+            cursor: pointer;
+        }
+        
+        #trollpump-app .mad-x-btn {
+            background: #000;
+            color: #fff;
+            border: 1px solid #555;
+        }
+        
+        #trollpump-app .mad-bounty-btn {
+            background: #fff;
+            color: #000;
+        }
+        
+        #trollpump-app .mad-close-btn {
+            background: #222;
+            color: #fff;
+        }
+        /* 3. Live Feed / Trang Tin */
+        
+        #trollpump-app .news-feed-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        #trollpump-app .news-feed-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.1rem;
+            font-weight: 900;
+            color: #fff;
+        }
+        
+        #trollpump-app .news-feed-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: var(--text-sub);
+            letter-spacing: 0.05em;
+        }
+        
+        #trollpump-app .news-feed-container {
+            background: rgba(9, 12, 16, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 14px;
+            padding: 12px 14px;
+            height: 210px;
+            overflow-y: auto;
+            font-family: ui-monospace, SFMono-Regular, "Roboto Mono", Consolas, monospace;
+            font-size: 0.82rem;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+        }
+        
+        #trollpump-app .news-feed-line {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #c9d1d9;
+            background: rgba(255, 255, 255, 0.02);
+            padding: 6px 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            animation: slideInLine 0.25s ease-out;
+        }
+        
+        @keyframes slideInLine {
+            from {
+                opacity: 0;
+                transform: translateX(-6px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        #trollpump-app .feed-badge {
+            background: rgba(46, 229, 124, 0.12);
+            color: var(--primary);
+            border: 1px solid rgba(46, 229, 124, 0.25);
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-weight: 800;
+            font-size: 0.75rem;
+            min-width: 68px;
+            text-align: center;
+        }
+        
+        #trollpump-app .feed-badge.clown {
+            background: rgba(255, 199, 58, 0.12);
+            color: var(--yellow);
+            border-color: rgba(255, 199, 58, 0.25);
+        }
+        
+        #trollpump-app .feed-msg {
+            color: #e6edf3;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        /* 4. Bottom Actions & Socials */
+        
+        #trollpump-app .bottom-action-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+            margin-top: 8px;
+        }
+        
+        #trollpump-app .pump-main-btn {
+            width: 100%;
+            max-width: 480px;
+            background: linear-gradient(135deg, #2ee57c 0%, #10b981 100%);
+            color: #042010;
+            border: none;
+            border-radius: 30px;
+            padding: 16px 24px;
+            font-size: 1.15rem;
+            font-weight: 900;
+            letter-spacing: 0.06em;
+            text-align: center;
+            text-decoration: none;
+            box-shadow: 0 6px 25px var(--primary-glow), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            display: block;
+        }
+        
+        #trollpump-app .pump-main-btn:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 10px 35px rgba(46, 229, 124, 0.5);
+            filter: brightness(1.08);
+        }
+        
+        #trollpump-app .ads-contact-link {
+            color: var(--text-sub);
+            font-size: 0.85rem;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-decoration: none;
+            transition: all 0.2s;
+            padding: 4px 12px;
+            border-radius: 12px;
+        }
+        
+        #trollpump-app .ads-contact-link:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        #trollpump-app .social-icon-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 18px;
+        }
+        
+        #trollpump-app .social-icon-link {
+            color: #ffffff;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(8px);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+        
+        #trollpump-app .social-icon-link:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            transform: translateY(-3px) scale(1.1);
+            box-shadow: 0 6px 20px var(--primary-glow);
+        }
+        
+        #trollpump-app .social-icon-link svg {
+            width: 22px;
+            height: 22px;
+            fill: currentColor;
+        }
+        
+        #trollpump-app .pump-main-btn {
+            background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
+            /* Đổi sang tông cam đỏ */
+            border-radius: 12px;
+            /* Giảm bo góc nút (mặc định là 30px) */
+            padding: 12px 20px;
+        }
+        /* 1. Giảm chiều cao và kích thước bên trong khu vực tin nhắn */
+        
+        #trollpump-app .news-feed-container {
+            height: 130px !important;
+            /* Chiều cao mặc định là 210px, bạn chỉnh số này nhỏ/lớn tùy ý */
+            padding: 8px 10px;
+            /* Thu nhỏ khoảng cách viền bên trong */
+            font-size: 0.75rem;
+            /* Thu nhỏ phông chữ tin nhắn */
+            gap: 4px;
+            /* Thu hẹp khoảng cách giữa các dòng tin */
+        }
+        /* 2. Thu nhỏ viền ngoài của toàn bộ khung chat */
+        
+        #trollpump-app .news-feed-card {
+            padding: 10px 12px;
+            /* Thu nhỏ độ dày viền ngoài (mặc định 18px) */
+            gap: 6px;
+            /* Thu hẹp khoảng cách tiêu đề và danh sách tin */
+            border-radius: 14px;
+            /* Bo góc gọn hơn */
+        }
+        /* 3. Thu nhỏ chiều cao của từng dòng tin nhắn */
+        
+        #trollpump-app .news-feed-line {
+            padding: 3px 8px;
+            /* Thu nhỏ padding từng dòng */
+            font-size: 0.75rem;
+        }
+        
+        #trollpump-app .news-feed-card {
+            max-width: 850px;
+            /* Hoặc 500px tùy ý */
+            margin: 0 auto;
+            /* Căn giữa khung */
+        }
+        /* 5. Responsive / Media Queries */
+        
+        @media (max-height: 800px) {
+            #trollpump-app .screen {
+                width: min(60vw, 450px);
+            }
+            #trollpump-app .container {
+                gap: 10px;
+            }
+        }
+        
+        @media (max-width: 600px) {
+            #trollpump-app .container {
+                margin: 0 auto;
+            }
+            #trollpump-app .screen {
+                width: 100%;
+                max-width: 500px;
+            }
+            #trollpump-app .troll-btn {
+                flex: 1 1 calc(50% - 6px);
+            }
+            #trollpump-app .ad-popup {
+                top: 50px;
+                right: 8px;
+                width: 175px;
+                padding: 8px;
+            }
+        }
+    </style>
+    <style>
+        #trollpump-app .mad-logo[src=""] {
+            display: none
+        }
+        
+        #trollpump-app .screen {
+            box-shadow: 0 0 0 1px rgba(46, 229, 124, .08), 0 18px 50px rgba(0, 0, 0, .38)
+        }
+    </style>
+
+    <script>
+        /* CẤU HÌNH ĐÃ ĐƯỢC TÙY CHỈNH THEO THEME MEME "MAX THE HERO" */
+        window.TROLLPUMP_CONFIG = {
+            runtimeVersion: "3.2.0-max-edition",
+
+            videoUrl: "https://files.catbox.moe/hg2ic0.mp4",
+            musicUrl: "",
+            videoVolume: 1,
+            musicVolume: 0.35,
+
+            logoUrl: "https://i.imgur.com/vD43I9E.png",
+            projectUrl: "https://join.pump.fun/HSag/ky1ri7h1",
+            bountyUrl: "https://join.pump.fun/HSag/ky1ri7h1",
+            shareUrl: "https://join.pump.fun/HSag/ky1ri7h1",
+            xHashtags: ["MAX", "PopularMaxDog", "PASTORALEMAN", "WATCH2EARN"],
+
+            countdownEnd: "2026-12-31T23:59:59",
+
+            claimUnlockSeconds: 780,
+            timelineLoopSeconds: 0,
+            adDurationMs: 12000,
+            adCacheMs: 60000,
+            adLoopCooldownMs: 3000,
+            preloadSponsorStats: true,
+
+            offers: [{
+                amount: "2500 MAX",
+                buttonLabel: "CLAIM 2500 $MAX",
+                unlockSeconds: 1500,
+                url: "https://join.pump.fun/HSag/ky1ri7h1"
+            }, {
+                amount: "6000 MAX",
+                buttonLabel: "CLAIM 6000 $MAX",
+                unlockSeconds: 3600,
+                url: "https://join.pump.fun/HSag/ky1ri7h1"
+            }],
+
+            popupCopy: {
+                "2": {
+                    title: "🐕 MAX ON DUTY",
+                    reward: "1000 $MAX",
+                    locationMode: "activity",
+                    sections: ["Trạng thái:\nĐang tuần tra cùng chú chó MAX."],
+                    proof: "✅ Xác minh thành công.\n🎁 Nhận thưởng lượt xem.",
+                    button: "NHẬN 1000 $MAX"
+                },
+                "3": {
+                    title: "🛡️ BẢO VỆ THÀNH CÔNG",
+                    reward: "2500 $MAX Tier",
+                    locationMode: "activity",
+                    sections: [
+                        "Đã hoàn thành 25 phút tuần tra.",
+                        "Sự trung thành và kiên trì của bạn đã được ghi nhận!"
+                    ],
+                    proof: "✅ Xác minh thành công.\n🎁 Nhận 2500 $MAX.",
+                    button: "NHẬN 2500 $MAX"
+                },
+                "5": {
+                    title: "🎖️ ANH HÙNG MAX REPORT",
+                    reward: "",
+                    showIdLabel: true,
+                    locationMode: "compact",
+                    sections: [
+                        "Hồ sơ:\nChiến sĩ gác cổng tin cậy",
+                        "Hạng thưởng:\n6000 $MAX",
+                        "Trạng thái:\nĐã hoàn thành 60 phút canh gác"
+                    ],
+                    proof: "✅ Phiên làm việc hợp lệ.\n🎁 Nhận ngay 6000 $MAX.",
+                    button: "NHẬN 6000 $MAX"
+                }
+            },
+
+            victimStart: 1997,
+            victimIntervalMs: 2200,
+            victimIncrementMin: 3,
+            victimIncrementMax: 9,
+            locationApiUrl: "https://ipapi.co/json/",
+
+            sponsors: [{
+                title: "🔥 FEATURED HERO TOKEN 🔥",
+                name: "$MAX",
+                message: "LEAL • VALIENTE • FIEL",
+                cta: "XEM $MAX TOKEN",
+                chain: "solana",
+                ca: "8LLbxPN3NZSszkaGSgGewG4tbcRCAETkbqB7GriEpump",
+                url: "https://join.pump.fun/HSag/ky1ri7h1"
+            }, {
+                title: "🚨 MAX SIGNAL ALERT 🚨",
+                name: "$MAX",
+                message: "SERVIR Y PROTEGER",
+                cta: "CHECK PRICE",
+                chain: "solana",
+                ca: "8LLbxPN3NZSszkaGSgGewG4tbcRCAETkbqB7GriEpump",
+                url: "https://join.pump.fun/HSag/ky1ri7h1"
+            }],
+
+            timeline: [
+                [0, "🐕 Chào mừng đến với kênh trực tiếp của MAX!"],
+                [10, "Un Pastor Alemán leal, valiente y lleno de energía."],
+                [30, "Đang túc trực tuần tra khu vực..."],
+                [60, "1 phút canh gác hoàn tất. Luôn trung thành!"],
+                [120, "Tiếp tục quan sát. Hệ thống đang ghi nhận tiến trình."],
+                [300, "5 phút tuần tra hoàn thành."],
+                [600, "10 phút tuần tra hoàn thành."],
+                [720, "Sắp đến mốc khen thưởng đầu tiên!"],
+                [780, "🎁 Mở khóa mốc thưởng 1000 $MAX!"],
+                [900, "15 phút xác minh thành công."],
+                [1200, "20 phút xác minh thành công."],
+                [1500, "🎁 Mở khóa mốc thưởng 2500 $MAX!"],
+                [1800, "30 phút hoàn thành. MAX vẫn luôn cảnh giác."],
+                [2400, "40 phút hoàn thành."],
+                [3000, "50 phút hoàn thành."],
+                [3360, "Chặng cuối cùng của ca tuần tra."],
+                [3540, "Còn 1 phút nữa."],
+                [3590, "Sắp hoàn tất ca trực."],
+                [3600, "🎖️ Đã hoàn thành 60 phút! MAX vinh danh bạn."]
+            ],
+
+            unlockSchedule: [35, 65, 125, 175, 325, 415, 605, 720, 780, 1500, 3600],
+
+            messages: {
+                "HOW IT WORKS": "Theo chân chú chó MAX tuần tra stream.\nCác mốc phần thưởng sẽ tự động mở khóa theo thời gian.",
+                "MY REWARD": "Phần thưởng tuần tra:\n13p = 1000 $MAX\n25p = 2500 $MAX\n60p = 6000 $MAX",
+                "DAILY SESSIONS": "Giới hạn nhiệm vụ:\n5 ca trực mỗi ngày cho mỗi tài khoản.",
+                "INVITE A FRIEND": "Mời đồng đội cùng tham gia đội tuần tra của MAX!",
+                "SESSION STATUS": "Trạng thái tuần tra:\nĐANG HOẠT ĐỘNG (ACTIVE)",
+                "PAUSE": "Có thể tạm dừng stream.\nĐồng hồ đếm ngược thưởng vẫn chạy ngầm.",
+                "REWARD RULES": "Đảm bảo xem đủ thời gian để nhận thưởng $MAX hợp lệ."
+            }
+        };
+        window.dispatchEvent(new Event("trollpump:config-ready"));
+    </script>
+</head>
+
+<body>
+    <div id="trollpump-app">
+        <div class="container">
+            <div class="countdown">
+                MAX CAMPAIGN COUNTDOWN:
+                <span id="timer">Loading...</span>
+            </div>
+
+            <div class="troll-buttons">
+                <button class="troll-btn">VIEW PROJECT</button>
+                <button class="troll-btn">HOW IT WORKS</button>
+                <button class="troll-btn">MY REWARD</button>
+                <button class="troll-btn">DAILY SESSIONS</button>
+                <button class="troll-btn">INVITE A FRIEND</button>
+                <button class="troll-btn">SESSION STATUS</button>
+                <button class="troll-btn">PAUSE</button>
+                <button class="troll-btn">REWARD RULES</button>
+                <button class="troll-btn" id="claimBtn" data-action="CLAIM 1000 MAX" disabled>🔒 13m 00s</button>
+                <button class="troll-btn" id="claim3Btn" data-action="CLAIM 2500 MAX" disabled>🔒 25m 00s</button>
+                <button class="troll-btn" id="claim5Btn" data-action="CLAIM 6000 MAX" disabled>🔒 60m 00s</button>
+            </div>
+
+            <div class="tv-frame">
+                <div class="screen">
+                    <div class="tv-overlay">
+                        <span class="live-dot"></span>
+                        <span>Popular Max Dog TV • LIVE</span>
+                    </div>
+
+                    <button class="sound-toggle" id="soundToggle" type="button" aria-label="Enable sound">🔇 OFF</button>
+
+                    <div class="ad-popup" id="adPopup">
+                        <div class="ad-title" id="adTitle">🐕 PopularMaxDog SPONSOR 🐕</div>
+                        <div class="ad-token" id="adToken">MC</div>
+                        <div class="ad-message" id="adMessage">LIVE PRICE • MCAP • VOL</div>
+                        <div class="ad-stats">
+                            <div class="ad-stats-row"><span>PRICE</span><span class="ad-stats-value" id="adPrice">Loading...</span></div>
+                            <div class="ad-stats-row"><span>MCAP</span><span class="ad-stats-value" id="adMcap">Loading...</span></div>
+                            <div class="ad-stats-row"><span>VOL 24H</span><span class="ad-stats-value" id="adVol">Loading...</span></div>
+                        </div>
+                        <a id="adLink" class="ad-btn" target="_blank" rel="noopener noreferrer">VIEW TOKEN</a>
+                    </div>
+
+                    <video id="video" autoplay muted loop playsinline preload="auto"></video>
+                    <audio id="bgMusic" loop preload="none"></audio>
+                    <div class="scanlines"></div>
+                    <div class="mc-talk" id="mcTalk">🐕 WATCH • PATROL • EARN $MAX</div>
+                </div>
+            </div>
+
+            <div class="tv-label">● PopularMaxDog • VERIFIED PATROL</div>
+            <div class="victim-count"><span id="victimCounter">12,487</span> verified patrollers today</div>
+        </div>
+        <!-- CHỨC NĂNG 1: TRANG TIN TROLL / LIVE FEED -->
+        <div class="news-feed-card">
+            <div class="news-feed-header">
+                <span>💬</span>
+                <span>Trang tin troll</span>
+            </div>
+            <div class="news-feed-status">
+                <span class="live-dot"></span>
+                <span>HOẠT ĐỘNG TROLL TRỰC TIẾP</span>
+            </div>
+            <div class="news-feed-container" id="newsFeedList">
+                <!-- Dynamic Feed Lines -->
+            </div>
+        </div>
+
+        <!-- CHỨC NĂNG 2: CTA PUMP.FUN & SOCIALS -->
+        <div class="bottom-action-group">
+            <a href="https://join.pump.fun/HSag/ky1ri7h1" target="_blank" class="pump-main-btn">POPULARMAXDOG ON PUMP.FUN</a>
+            <a href="https://t.me/" target="_blank" class="ads-contact-link">QUẢNG CÁO LIÊN HỆ</a>
+
+            <div class="social-icon-row">
+                <!-- Chat Icon -->
+                <a href="#" class="social-icon-link" title="Bình luận">
+                    <svg viewBox="0 0 24 24">
+                            <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
+                        </svg>
+                </a>
+                <!-- Telegram Icon -->
+                <a href="https://t.me/" target="_blank" class="social-icon-link" title="Telegram">
+                    <svg viewBox="0 0 24 24">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.19-.04-.27-.02-.12.02-1.96 1.25-5.54 3.69-.52.36-1 .53-1.42.52-.47-.01-1.37-.26-2.03-.48-.82-.27-1.47-.42-1.42-.88.03-.25.38-.51 1.07-.78 4.18-1.82 6.97-3.02 8.37-3.61 3.99-1.66 4.83-1.95 5.37-1.96.12 0 .38.03.55.17.14.12.18.28.2.43-.02.07-.02.21-.03.35z"/>
+                        </svg>
+                </a>
+                <!-- X / Twitter Icon -->
+                <a href="https://x.com/popularmaxdog" target="_blank" class="social-icon-link" title="X (Twitter)">
+                    <svg viewBox="0 0 24 24">
+                            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                        </svg>
+                </a>
+            </div>
+        </div>
+        <div class="mad-popup" id="madPopup" role="dialog" aria-modal="true" aria-labelledby="madPopupTitle">
+            <div class="mad-popup-box">
+                <img class="mad-logo" id="madLogo" src="https://i.imgur.com/vD43I9E.png" alt="MAX Hero logo">
+                <h2 id="madPopupTitle">🐕 WATCH • PATROL • EARN</h2>
+                <div class="mad-popup-content" id="madPopupContent"></div>
+                <div class="mad-popup-actions">
+                    <button class="mad-x-btn" id="xPostBtn" type="button">SHARE ON X</button>
+                    <button class="mad-bounty-btn" id="bountyBtn" type="button">CLAIM REWARD</button>
+                    <button class="mad-close-btn" id="closeMadPopupBtn" type="button">OK</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <script>
+        (function() {
+            "use strict";
+
+            const app = window.TrollPumpApp = window.TrollPumpApp || {};
+
+            function bootCore() {
+                if (app.coreReady && app.root && app.root.isConnected) return true;
+                if (app.coreReady && (!app.root || !app.root.isConnected)) {
+                    app.coreReady = false;
+                    app.uiReady = false;
+                }
+
+                const root = document.getElementById("trollpump-app");
+                if (!root) return false;
+
+                const cfg = window.TROLLPUMP_CONFIG;
+                if (!cfg || !Array.isArray(cfg.timeline) || !Array.isArray(cfg.unlockSchedule) || !Array.isArray(cfg.sponsors)) {
+                    return false;
+                }
+                const $ = selector => root.querySelector(selector);
+
+                const video = $("#video");
+                const bgMusic = $("#bgMusic");
+                const screen = $(".screen");
+                const soundToggle = $("#soundToggle");
+                const adPopup = $("#adPopup");
+                const adTitle = $("#adTitle");
+                const adToken = $("#adToken");
+                const adMessage = $("#adMessage");
+                const adPrice = $("#adPrice");
+                const adMcap = $("#adMcap");
+                const adVol = $("#adVol");
+                const adLink = $("#adLink");
+
+                const requiredElements = [
+                    video, screen, soundToggle, adPopup, adTitle, adToken,
+                    adMessage, adPrice, adMcap, adVol, adLink
+                ];
+
+                if (requiredElements.some(element => !element)) return false;
+                if (app.coreBooting) return false;
+                app.coreBooting = true;
+
+                app.root = root;
+                app.cfg = cfg;
+                app.$ = $;
+                app.startTime = app.startTime || Date.now();
+
+                if (cfg.videoUrl) {
+                    video.src = cfg.videoUrl;
+                    video.preload = "auto";
+                    video.load();
+                }
+
+                if (bgMusic && cfg.musicUrl) {
+                    bgMusic.src = cfg.musicUrl;
+                    bgMusic.preload = "auto";
+                    bgMusic.load();
+                }
+
+                const videoVolume = Math.min(1, Math.max(0, Number(cfg.videoVolume == null ? 1 : cfg.videoVolume)));
+                const musicVolume = Math.min(1, Math.max(0, Number(cfg.musicVolume == null ? 0.35 : cfg.musicVolume)));
+                let soundEnabled = false;
+
+                function updateSoundButton() {
+                    if (!soundToggle) return;
+                    soundToggle.classList.toggle("is-on", soundEnabled && !video.muted);
+                    soundToggle.textContent = soundEnabled && !video.muted ?
+                        "🔊 ON" :
+                        "🔇 OFF";
+                    soundToggle.setAttribute("aria-label", soundEnabled && !video.muted ?
+                        "Mute sound" :
+                        "Enable sound");
+                }
+
+                function startMutedPlayback() {
+                    video.defaultMuted = true;
+                    video.muted = true;
+                    video.volume = videoVolume;
+                    video.setAttribute("muted", "");
+                    const attempt = video.play();
+                    if (attempt && typeof attempt.catch === "function") {
+                        attempt.catch(error => console.warn("Muted video autoplay was blocked:", error));
+                    }
+                }
+
+                function enableSound() {
+                    soundEnabled = true;
+
+                    video.defaultMuted = false;
+                    video.muted = false;
+                    video.volume = videoVolume;
+                    video.removeAttribute("muted");
+
+                    const videoAttempt = video.play();
+                    if (videoAttempt && typeof videoAttempt.catch === "function") {
+                        videoAttempt.catch(error => console.warn("Video sound could not start:", error));
+                    }
+
+                    if (bgMusic && cfg.musicUrl) {
+                        bgMusic.muted = false;
+                        bgMusic.volume = musicVolume;
+                        const musicAttempt = bgMusic.play();
+                        if (musicAttempt && typeof musicAttempt.catch === "function") {
+                            musicAttempt.catch(error => console.warn("Background music could not start:", error));
+                        }
+                    }
+
+                    updateSoundButton();
+                }
+
+                function disableSound() {
+                    soundEnabled = false;
+                    video.muted = true;
+                    if (bgMusic) {
+                        bgMusic.muted = true;
+                        bgMusic.pause();
+                    }
+                    updateSoundButton();
+                }
+
+                function toggleSound(event) {
+                    if (event) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    if (soundEnabled && !video.muted) {
+                        disableSound();
+                    } else {
+                        enableSound();
+                    }
+                }
+
+                startMutedPlayback();
+                updateSoundButton();
+
+                if (soundToggle) {
+                    soundToggle.addEventListener("click", toggleSound);
+                }
+
+                screen.addEventListener("click", event => {
+                    if (event.target.closest("a,button")) return;
+                    enableSound();
+                });
+
+                function unlockOnFirstGesture(event) {
+                    if (soundEnabled) return;
+                    if (event.target instanceof Element && event.target.closest("#soundToggle")) return;
+                    enableSound();
+                    document.removeEventListener("pointerdown", unlockOnFirstGesture, true);
+                    document.removeEventListener("keydown", unlockOnFirstGesture, true);
+                }
+
+                document.addEventListener("pointerdown", unlockOnFirstGesture, true);
+                document.addEventListener("keydown", unlockOnFirstGesture, true);
+
+                video.addEventListener("play", () => {
+                    if (soundEnabled) {
+                        video.muted = false;
+                        video.volume = videoVolume;
+                    }
+                    updateSoundButton();
+                });
+
+                video.addEventListener("volumechange", updateSoundButton);
+
+                video.addEventListener("error", () => {
+                    console.error("Video failed to load:", video.error, video.currentSrc || cfg.videoUrl);
+                });
+
+                app.enableSound = enableSound;
+                app.disableSound = disableSound;
+
+                const sponsors = Array.isArray(cfg.sponsors) ? cfg.sponsors : [];
+                const cache = new Map();
+                let sponsorIndex = 0;
+                let lastVideoTime = 0;
+                let lastLoopTrigger = 0;
+                let adTimer = null;
+
+                function formatUsdCompact(value) {
+                    const number = Number(value);
+                    if (!Number.isFinite(number)) return "N/A";
+                    if (number >= 1e9) return "$" + (number / 1e9).toFixed(2) + "B";
+                    if (number >= 1e6) return "$" + (number / 1e6).toFixed(2) + "M";
+                    if (number >= 1e3) return "$" + (number / 1e3).toFixed(1) + "K";
+                    if (number >= 1) return "$" + number.toFixed(2);
+                    if (number > 0) return "$" + number.toFixed(8).replace(/0+$/, "").replace(/\.$/, "");
+                    return "$0";
+                }
+
+                function formatTokenPrice(value) {
+                    const number = Number(value);
+                    if (!Number.isFinite(number) || number <= 0) return "N/A";
+                    if (number >= 1) {
+                        return "$" + number.toLocaleString("en-US", {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 6
+                        });
+                    }
+                    if (number >= 0.01) {
+                        return "$" + number.toFixed(6).replace(/0+$/, "").replace(/\.$/, "");
+                    }
+                    return "$" + number.toFixed(10).replace(/0+$/, "").replace(/\.$/, "");
+                }
+
+                function selectBestPair(pairs) {
+                    if (!Array.isArray(pairs) || !pairs.length) return null;
+                    return pairs
+                        .filter(pair => pair && pair.priceUsd)
+                        .sort((a, b) => Number((b && b.liquidity && b.liquidity.usd) || 0) - Number((a && a.liquidity && a.liquidity.usd) || 0))[0] || null;
+                }
+
+                async function loadDexStats(sponsor) {
+                    const cacheKey = sponsor.chain + ":" + sponsor.ca;
+                    const cached = cache.get(cacheKey);
+                    const maxAge = Number(cfg.adCacheMs || 60000);
+
+                    if (cached && Date.now() - cached.loadedAt < maxAge) {
+                        return cached.data;
+                    }
+
+                    const endpoint = "https://api.dexscreener.com/token-pairs/v1/" +
+                        encodeURIComponent(sponsor.chain) +
+                        "/" +
+                        encodeURIComponent(sponsor.ca);
+
+                    const response = await fetch(endpoint, {
+                        headers: {
+                            Accept: "application/json"
+                        }
+                    });
+                    if (!response.ok) throw new Error("DexScreener HTTP " + response.status);
+
+                    const pair = selectBestPair(await response.json());
+                    if (!pair) throw new Error("No trading pair was found for this token");
+
+                    const data = {
+                        name: (pair.baseToken && (pair.baseToken.symbol || pair.baseToken.name)) || sponsor.name,
+                        price: pair.priceUsd,
+                        mcap: pair.marketCap || pair.fdv,
+                        volume: pair.volume && pair.volume.h24,
+                        dexUrl: pair.url
+                    };
+
+                    cache.set(cacheKey, {
+                        loadedAt: Date.now(),
+                        data
+                    });
+                    return data;
+                }
+
+                function setLoading(sponsor) {
+                    adTitle.textContent = sponsor.title || "🐕 MAX PATROL SPONSOR 🐕";
+                    adToken.textContent = sponsor.name || "$MAX";
+                    adMessage.textContent = sponsor.message || "LIVE PRICE • MCAP • VOL";
+                    adPrice.textContent = "Loading...";
+                    adMcap.textContent = "Loading...";
+                    adVol.textContent = "Loading...";
+                    adLink.textContent = sponsor.cta || "VIEW TOKEN";
+                    adLink.href = sponsor.url || "#";
+                }
+
+                async function showSponsorAd() {
+                    if (!sponsors.length) return;
+
+                    const sponsor = sponsors[sponsorIndex];
+                    sponsorIndex = (sponsorIndex + 1) % sponsors.length;
+
+                    setLoading(sponsor);
+                    adPopup.classList.add("show");
+
+                    clearTimeout(adTimer);
+                    adTimer = setTimeout(
+                        () => adPopup.classList.remove("show"),
+                        Number(cfg.adDurationMs || 12000)
+                    );
+
+                    try {
+                        const stats = await loadDexStats(sponsor);
+                        adToken.textContent = stats.name || sponsor.name;
+                        adPrice.textContent = formatTokenPrice(stats.price);
+                        adMcap.textContent = formatUsdCompact(stats.mcap);
+                        adVol.textContent = formatUsdCompact(stats.volume);
+                        adLink.href = sponsor.url || stats.dexUrl || "#";
+                    } catch (error) {
+                        console.error("Unable to load DexScreener data:", error);
+                        adPrice.textContent = "N/A";
+                        adMcap.textContent = "N/A";
+                        adVol.textContent = "N/A";
+                        adLink.href = sponsor.url || "#";
+                    }
+                }
+
+                app.showSponsorAd = showSponsorAd;
+
+                video.addEventListener("timeupdate", () => {
+                    const currentTime = video.currentTime;
+                    const looped = lastVideoTime > 1 && currentTime + 0.25 < lastVideoTime;
+                    const cooldown = Date.now() - lastLoopTrigger > Number(cfg.adLoopCooldownMs || 3000);
+
+                    if (looped && cooldown) {
+                        lastLoopTrigger = Date.now();
+                        showSponsorAd();
+                    }
+
+                    lastVideoTime = currentTime;
+                });
+
+                if (cfg.preloadSponsorStats !== false && sponsors[0]) {
+                    setTimeout(() => loadDexStats(sponsors[0]).catch(() => {}), 1500);
+                }
+
+                app.runtimeVersion = cfg.runtimeVersion || "3.2.0-max";
+                app.coreReady = true;
+                app.coreBooting = false;
+                app.coreRetryStarted = false;
+                window.dispatchEvent(new CustomEvent("trollpump:core-ready"));
+                return true;
+            }
+
+            function safeBootCore() {
+                try {
+                    return bootCore();
+                } catch (error) {
+                    console.error("TrollPump core boot failed:", error);
+                    app.coreReady = false;
+                    app.coreBooting = false;
+                    return false;
+                }
+            }
+
+            function stopCoreRetry() {
+                if (app.coreRetryTimer) {
+                    clearInterval(app.coreRetryTimer);
+                    app.coreRetryTimer = null;
+                }
+                if (app.coreObserver) {
+                    app.coreObserver.disconnect();
+                    app.coreObserver = null;
+                }
+                app.coreRetryStarted = false;
+            }
+
+            function startCoreBoot() {
+                if (safeBootCore()) {
+                    stopCoreRetry();
+                    return;
+                }
+
+                if (!app.coreRetryTimer) {
+                    app.coreRetryStarted = true;
+                    app.coreRetryTimer = setInterval(function() {
+                        if (safeBootCore()) stopCoreRetry();
+                    }, 500);
+                }
+
+                if (!app.coreObserver && document.documentElement) {
+                    app.coreObserver = new MutationObserver(function() {
+                        if (safeBootCore()) stopCoreRetry();
+                    });
+                    app.coreObserver.observe(document.documentElement, {
+                        childList: true,
+                        subtree: true
+                    });
+                }
+            }
+
+            window.addEventListener("trollpump:config-ready", startCoreBoot);
+
+            if (document.readyState === "loading") {
+                document.addEventListener("DOMContentLoaded", startCoreBoot, {
+                    once: true
+                });
+            } else {
+                startCoreBoot();
+            }
+
+            window.addEventListener("load", startCoreBoot, {
+                once: true
+            });
+            window.addEventListener("pageshow", startCoreBoot);
+        })();
+    </script>
+    <script>
+        (function() {
+                "use strict";
+
+                function bootUi() {
+                    const app = window.TrollPumpApp = window.TrollPumpApp || {};
+                    const root = app.root && app.root.isConnected ?
+                        app.root :
+                        document.getElementById("trollpump-app");
+                    const cfg = app.cfg || window.TROLLPUMP_CONFIG || {};
+
+                    if (!root || !cfg || !Array.isArray(cfg.timeline) || !Array.isArray(cfg.unlockSchedule)) {
+                        return false;
+                    }
+
+                    if (app.uiReady && app.root === root && root.isConnected) return true;
+                    if (app.uiReady && (!app.root || !app.root.isConnected || app.root !== root)) {
+                        app.uiReady = false;
+                    }
+                    if (app.uiBooting) return false;
+
+                    const $ = selector => root.querySelector(selector);
+                    app.root = root;
+                    app.cfg = cfg;
+                    app.$ = $;
+
+                    if (!Number.isFinite(app.startTime)) app.startTime = Date.now();
+                    const startTime = app.startTime;
+
+                    const claimBtn = $("#claimBtn");
+                    const claim3Btn = $("#claim3Btn");
+                    const claim5Btn = $("#claim5Btn");
+                    const madPopup = $("#madPopup");
+                    const madLogo = $("#madLogo");
+                    const madPopupTitle = $("#madPopupTitle");
+                    const madPopupContent = $("#madPopupContent");
+                    const xPostBtn = $("#xPostBtn");
+                    const bountyBtn = $("#bountyBtn");
+                    const closeMadPopupBtn = $("#closeMadPopupBtn");
+                    const mcTalk = $("#mcTalk");
+                    const timer = $("#timer");
+                    const victimCounter = $("#victimCounter");
+
+                    const requiredElements = [
+                        claimBtn, claim3Btn, claim5Btn, madPopup, madLogo,
+                        madPopupTitle, madPopupContent, xPostBtn, bountyBtn,
+                        closeMadPopupBtn, mcTalk, timer, victimCounter
+                    ];
+
+                    if (requiredElements.some(element => !element)) return false;
+                    app.uiBooting = true;
+
+                    if (cfg.logoUrl) madLogo.src = cfg.logoUrl;
+
+                    let madLocation = "Earth 🌍";
+                    let activeTier = "2";
+
+                    function countryCodeToFlag(code) {
+                        if (!code || code.length !== 2) return "🌍";
+                        return String.fromCodePoint(
+                            ...code.toUpperCase().split("").map(char => 127397 + char.charCodeAt(0))
+                        );
+                    }
+
+                    function createMadId() {
+                        return "MAX-" + Math.random().toString(36).substring(2, 10).toUpperCase();
+                    }
+
+                    let madId;
+                    try {
+                        madId = localStorage.getItem("max_hero_viewer_id");
+                        if (!madId) {
+                            madId = createMadId();
+                            localStorage.setItem("max_hero_viewer_id", madId);
+                        }
+                    } catch (error) {
+                        madId = createMadId();
+                    }
+
+                    if (cfg.locationApiUrl) {
+                        fetch(cfg.locationApiUrl)
+                            .then(response => {
+                                if (!response.ok) throw new Error("Location request failed");
+                                return response.json();
+                            })
+                            .then(data => {
+                                const place = data.city || data.region || data.country_name || "Earth";
+                                madLocation = `${place} ${countryCodeToFlag(data.country_code)}`;
+                            })
+                            .catch(() => {
+                                madLocation = "Earth 🌍";
+                            });
+                    }
+
+                    function elapsedSeconds() {
+                        return Math.floor((Date.now() - startTime) / 1000);
+                    }
+
+                    function formatClock(totalSeconds) {
+                        const safe = Math.max(0, Math.floor(totalSeconds));
+                        const hours = Math.floor(safe / 3600);
+                        const minutes = Math.floor((safe % 3600) / 60);
+                        const seconds = safe % 60;
+                        if (hours > 0) {
+                            return `${hours}h ${String(minutes).padStart(2,"0")}m ${String(seconds).padStart(2,"0")}s`;
+                        }
+                        return `${minutes}m ${String(seconds).padStart(2,"0")}s`;
+                    }
+
+                    function escapeHtml(value) {
+                        return String(value)
+                            .replace(/&/g, "&amp;")
+                            .replace(/</g, "&lt;")
+                            .replace(/>/g, "&gt;")
+                            .replace(/"/g, "&quot;")
+                            .replace(/'/g, "&#039;");
+                    }
+
+                    function formatSurvival(tier, totalSeconds) {
+                        const safe = Math.max(0, Math.floor(totalSeconds));
+                        if (String(tier) === "3" || String(tier) === "5") {
+                            return `${Math.floor(safe/60)}m`;
+                        }
+                        return formatClock(safe);
+                    }
+
+                    function getPopupCopy(tier) {
+                        const copy = cfg.popupCopy || {};
+                        return copy[String(tier)] || copy["2"] || {};
+                    }
+
+                    function getTierUrl(tier) {
+                        const offers = Array.isArray(cfg.offers) ? cfg.offers : [];
+                        if (String(tier) === "3") return (offers[0] && offers[0].url) || cfg.bountyUrl || "#";
+                        if (String(tier) === "5") return (offers[1] && offers[1].url) || cfg.bountyUrl || "#";
+                        return cfg.bountyUrl || "#";
+                    }
+
+                    function renderPopup(tier) {
+                        const copy = getPopupCopy(tier);
+                        const elapsed = elapsedSeconds();
+                        const sections = Array.isArray(copy.sections) ? copy.sections : [];
+                        const parts = [];
+
+                        if (copy.reward) {
+                            parts.push(`<div class="mad-popup-reward">${escapeHtml(copy.reward)}</div>`);
+                        }
+
+                        if (copy.showIdLabel) {
+                            parts.push('<div class="mad-popup-id-label">ID CHIẾN SĨ:</div>');
+                        }
+
+                        parts.push(`<div class="mad-popup-id">${escapeHtml(madId)}</div>`);
+
+                        if (copy.locationMode === "compact") {
+                            parts.push(`<div class="mad-popup-location">📍 ${escapeHtml(madLocation)}</div>`);
+                        } else {
+                            parts.push('<div class="mad-location-title">📍 Phiên tuần tra MAX:</div>');
+                            parts.push(`<div class="mad-popup-location">${escapeHtml(madLocation)}</div>`);
+                        }
+
+                        parts.push(`<div class="mad-popup-time">⏱ ${escapeHtml(formatSurvival(tier,elapsed))} thời gian hợp lệ</div>`);
+
+                        sections.forEach(section => {
+                            parts.push(`<div class="mad-popup-section">${escapeHtml(section)}</div>`);
+                        });
+
+                        if (copy.proof) {
+                            parts.push(`<div class="mad-popup-proof">${escapeHtml(copy.proof)}</div>`);
+                        }
+
+                        madPopupTitle.textContent = copy.title || "🐕 MAX HERO LIVE";
+                        madPopupContent.innerHTML = parts.join("");
+                        bountyBtn.textContent = copy.button || "NHẬN PHẦN THƯỞNG";
+                    }
+
+                    function openMadPopup(tier) {
+                        activeTier = String(tier || "2");
+                        renderPopup(activeTier);
+                        madPopup.classList.add("show");
+                    }
+
+                    function closeMadPopup() {
+                        madPopup.classList.remove("show");
+                    }
+
+                    function buildXText() {
+                        const copy = getPopupCopy(activeTier);
+                        const lines = [copy.title || "🐕 MAX HERO LIVE"];
+
+                        if (copy.reward) lines.push(copy.reward);
+                        if (copy.showIdLabel) lines.push("ID:");
+                        lines.push(madId);
+
+                        if (copy.locationMode === "compact") {
+                            lines.push(`📍 ${madLocation}`);
+                        } else {
+                            lines.push("📍 Ca tuần tra MAX:");
+                            lines.push(madLocation);
+                        }
+
+                        lines.push(`⏱ ${formatSurvival(activeTier,elapsedSeconds())} xác thực`);
+
+                        if (Array.isArray(copy.sections)) {
+                            copy.sections.forEach(section => lines.push(section));
+                        }
+
+                        if (copy.proof) lines.push(copy.proof);
+
+                        const hashtags = Array.isArray(cfg.xHashtags) ?
+                            cfg.xHashtags.map(tag => "#" + String(tag).replace(/^#/, "")).join(" ") :
+                            "";
+
+                        if (hashtags) lines.push(hashtags);
+                        return lines.join("\n\n");
+                    }
+
+                    xPostBtn.addEventListener("click", () => {
+                        const text = encodeURIComponent(buildXText());
+                        const url = encodeURIComponent(cfg.shareUrl || window.location.href);
+                        window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, "_blank", "noopener,noreferrer");
+                    });
+
+                    bountyBtn.addEventListener("click", () => {
+                        window.open(getTierUrl(activeTier), "_blank", "noopener,noreferrer");
+                    });
+
+                    closeMadPopupBtn.addEventListener("click", closeMadPopup);
+                    madPopup.addEventListener("click", event => {
+                        if (event.target === madPopup) closeMadPopup();
+                    });
+                    document.addEventListener("keydown", event => {
+                        if (event.key === "Escape") closeMadPopup();
+                    });
+
+                    function updateYearCountdown() {
+                        const endDate = new Date(cfg.countdownEnd || "2026-12-31T23:59:59");
+                        const diff = endDate.getTime() - Date.now();
+
+                        if (!Number.isFinite(endDate.getTime())) {
+                            timer.textContent = "Invalid countdown date";
+                            return;
+                        }
+
+                        if (diff <= 0) {
+                            timer.textContent = "END OF 2026 😂";
+                            return;
+                        }
+
+                        const days = Math.floor(diff / 86400000);
+                        const hours = Math.floor((diff % 86400000) / 3600000);
+                        const minutes = Math.floor((diff % 3600000) / 60000);
+                        const seconds = Math.floor((diff % 60000) / 1000);
+                        timer.textContent = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+                    }
+
+                    const offers = Array.isArray(cfg.offers) ? cfg.offers : [];
+
+                    function updateClaimButton() {
+                        const unlockTime = Number(cfg.claimUnlockSeconds || 780);
+                        const elapsed = elapsedSeconds();
+
+                        if (elapsed >= unlockTime) {
+                            claimBtn.disabled = false;
+                            claimBtn.textContent = "🎁 CLAIM 1000 $MAX";
+                        } else {
+                            claimBtn.disabled = true;
+                            claimBtn.textContent = `🔒 ${formatClock(unlockTime-elapsed)}`;
+                        }
+                    }
+
+                    const topOfferButtons = [claim3Btn, claim5Btn];
+
+                    function updateTopOfferButtons() {
+                        const elapsed = elapsedSeconds();
+
+                        topOfferButtons.forEach((button, index) => {
+                                    if (!button) return;
+                                    const offer = offers[index] || {};
+                                    const unlockAt = Number(offer.unlockSeconds || 0);
+                                    const remaining = unlockAt - elapsed;
+
+                                    if (remaining <= 0) {
+                                        button.disabled = false;
+                                        button.textContent = `🎁 ${offer.buttonLabel || `CLAIM ${offer.amount || `OFFER ${index+1}`}`}`;
+                            } else {
+                                button.disabled = true;
+                                button.textContent = `🔒 ${formatClock(remaining)}`;
+                            }
+                        });
+                    }
+
+                    const timeline = Array.isArray(cfg.timeline) ? cfg.timeline : [];
+                    const configuredTimelineLoop = Number(cfg.timelineLoopSeconds);
+                    const timelineLoopSeconds = Number.isFinite(configuredTimelineLoop) ?
+                        Math.max(0, configuredTimelineLoop) :
+                        0;
+                    let lastTimelineKey = "";
+
+                    function updateTimeline() {
+                        if (!timeline.length) return;
+
+                        const elapsed = elapsedSeconds();
+                        const cycleNumber = timelineLoopSeconds > 0 ?
+                            Math.floor(elapsed / timelineLoopSeconds) :
+                            0;
+                        const cycleElapsed = timelineLoopSeconds > 0 ?
+                            elapsed % timelineLoopSeconds :
+                            elapsed;
+
+                        let activeEntry = timeline[0];
+                        for (const entry of timeline) {
+                            if (cycleElapsed >= Number(entry[0])) {
+                                activeEntry = entry;
+                            } else {
+                                break;
+                            }
+                        }
+
+                        const timelineKey = `${cycleNumber}:${activeEntry[0]}`;
+                        if (timelineKey !== lastTimelineKey) {
+                            mcTalk.textContent = activeEntry[1];
+                            lastTimelineKey = timelineKey;
+                        }
+                    }
+
+                    const actions = Object.assign({}, cfg.messages || {}, {
+                        "VIEW PROJECT": () => {
+                            window.open(cfg.projectUrl || cfg.bountyUrl || "#", "_blank", "noopener,noreferrer");
+                            return null;
+                        },
+                        "CLAIM 1000 MAX": () => {
+                            if (elapsedSeconds() < Number(cfg.claimUnlockSeconds || 780)) return null;
+                            openMadPopup("2");
+                            return null;
+                        },
+                        "CLAIM 2500 MAX": () => {
+                            const offer = offers[0] || {};
+                            if (elapsedSeconds() < Number(offer.unlockSeconds || 1500)) return null;
+                            openMadPopup("3");
+                            return null;
+                        },
+                        "CLAIM 6000 MAX": () => {
+                            const offer = offers[1] || {};
+                            if (elapsedSeconds() < Number(offer.unlockSeconds || 3600)) return null;
+                            openMadPopup("5");
+                            return null;
+                        }
+                    });
+
+                    root.querySelectorAll(".troll-btn").forEach(btn => {
+                        btn.addEventListener("click", () => {
+                            const actionKey = btn.dataset.action || btn.textContent.trim();
+                            const action = actions[actionKey];
+                            const result = typeof action === "function" ? action() : action;
+                            if (result !== null && result !== undefined) alert(result);
+                        });
+                    });
+
+                    const unlockSchedule = Array.isArray(cfg.unlockSchedule) ? cfg.unlockSchedule : [];
+                    const allButtons = Array.from(root.querySelectorAll(".troll-btn"));
+
+                    function updateUnlockStates() {
+                        const elapsed = elapsedSeconds();
+
+                        allButtons.forEach((btn, index) => {
+                            const seconds = Number(unlockSchedule[index]);
+                            if (Number.isFinite(seconds) && elapsed >= seconds) {
+                                btn.classList.add("active");
+                            }
+                        });
+                    }
+
+                    function runtimeTick() {
+                        updateYearCountdown();
+                        updateClaimButton();
+                        updateTopOfferButtons();
+                        updateTimeline();
+                        updateUnlockStates();
+                    }
+
+                    runtimeTick();
+                    app.runtimeTick = runtimeTick;
+
+                    if (app.runtimeTimer) clearInterval(app.runtimeTimer);
+                    app.runtimeTimer = setInterval(function() {
+                        try {
+                            runtimeTick();
+                            app.lastRuntimeTickAt = Date.now();
+                        } catch (error) {
+                            console.error("MAX Hero runtime tick failed:", error);
+                        }
+                    }, 1000);
+                    app.lastRuntimeTickAt = Date.now();
+
+                    document.addEventListener("visibilitychange", function() {
+                        if (!document.hidden) runtimeTick();
+                    });
+                    window.addEventListener("pageshow", runtimeTick);
+
+                    app.getRuntimeStatus = function() {
+                        const elapsed = elapsedSeconds();
+                        return {
+                            runtimeVersion: cfg.runtimeVersion || "3.2.0-max",
+                            coreReady: !!app.coreReady,
+                            uiReady: !!app.uiReady,
+                            configReady: !!window.TROLLPUMP_CONFIG,
+                            uiBootMode: app.coreReady ? "core+ui" : "standalone-ui",
+                            lastRuntimeTickAt: app.lastRuntimeTickAt || null,
+                            elapsedSeconds: elapsed,
+                            timelineLoopSeconds: timelineLoopSeconds,
+                            timelineCycleSeconds: timelineLoopSeconds > 0 ? elapsed % timelineLoopSeconds : elapsed,
+                            timelineMessage: mcTalk.textContent,
+                            buttons: Array.from(root.querySelectorAll(".troll-btn")).map(function(button) {
+                                return {
+                                    text: button.textContent,
+                                    active: button.classList.contains("active"),
+                                    disabled: button.disabled
+                                };
+                            })
+                        };
+                    };
+
+                    let victims = Number(cfg.victimStart || 1997);
+                    victimCounter.textContent = victims.toLocaleString("en-US");
+
+                    setInterval(() => {
+                        const min = Number(cfg.victimIncrementMin || 3);
+                        const max = Number(cfg.victimIncrementMax || 9);
+                        victims += Math.floor(Math.random() * (max - min + 1)) + min;
+                        victimCounter.textContent = victims.toLocaleString("en-US");
+                    }, Number(cfg.victimIntervalMs || 2200));
+
+                    app.uiReady = true;
+                    app.uiBooting = false;
+                    app.uiRetryStarted = false;
+                    window.dispatchEvent(new CustomEvent("trollpump:ui-ready"));
+                    return true;
+                }
+
+                function safeBootUi() {
+                    const app = window.TrollPumpApp = window.TrollPumpApp || {};
+                    try {
+                        return bootUi();
+                    } catch (error) {
+                        console.error("MAX Hero UI boot failed:", error);
+                        app.uiReady = false;
+                        app.uiBooting = false;
+                        return false;
+                    }
+                }
+
+                function stopUiRetry() {
+                    const app = window.TrollPumpApp = window.TrollPumpApp || {};
+                    if (app.uiRetryTimer) {
+                        clearInterval(app.uiRetryTimer);
+                        app.uiRetryTimer = null;
+                    }
+                    app.uiRetryStarted = false;
+                }
+
+                function startUiBoot() {
+                    const app = window.TrollPumpApp = window.TrollPumpApp || {};
+
+                    if (safeBootUi()) {
+                        stopUiRetry();
+                        return;
+                    }
+
+                    if (!app.uiRetryTimer) {
+                        app.uiRetryStarted = true;
+                        app.uiRetryTimer = setInterval(function() {
+                            if (safeBootUi()) stopUiRetry();
+                        }, 500);
+                    }
+                }
+            const newsFeedList = document.getElementById("newsFeedList");
+            const sampleLogs = [{
+                        type: "green",
+                        icon: "🟢",
+                        val: "0.4 SOL",
+                        msg: "Tôi nghĩ lần này ổn..."
+                    }, {
+                        type: "clown",
+                        icon: "🤡",
+                        val: "1.9 SOL",
+                        msg: "Không ổn một chút nào..."
+                    }, {
+                        type: "green",
+                        icon: "🟢",
+                        val: "2.3 SOL",
+                        msg: "Có vẻ mọi thứ đang thay đổi..."
+                    }, {
+                        type: "clown",
+                        icon: "🤡",
+                        val: "0.7 SOL",
+                        msg: "Tôi đã quá tin tưởng..."
+                    }, {
+                        type: "green",
+                        icon: "🟢",
+                        val: "1.1 SOL",
+                        msg: "Chắc chắn đây là cơ hội..."
+                    }, {
+                        type: "green",
+                        icon: "🟢",
+                        val: "3.7 SOL",
+                        msg: "Tôi không thể dừng lại..."
+                    }, {
+                        type: "clown",
+                        icon: "🤡",
+                        val: "2.4 SOL",
+                        msg: "Lại một bài học nữa..."
+                    }, {
+                        type: "green",
+                        icon: "🟢",
+                        val: "0.2 SOL",
+                        msg: "Chỉ thử một chút thôi..."
+                    }, {
+                        type: "clown",
+                        icon: "🤡",
+                        val: "4.8 SOL",
+                        msg: "Tôi biết ngay mà..."
+                    }, {
+                        type: "green",
+                        icon: "🟢",
+                        val: "1.6 SOL",
+                        msg: "Mọi thứ đang rất tốt..."
+                    },
+
+                    {
+                        type: "green",
+                        icon: "🟢",
+                        val: "2.9 SOL",
+                        msg: "Đừng nói với tôi là thật..."
+                    }, {
+                        type: "clown",
+                        icon: "🤡",
+                        val: "1.3 SOL",
+                        msg: "Tôi vừa mất niềm tin..."
+                    }, {
+                        type: "green",
+                        icon: "🟢",
+                        val: "0.8 SOL",
+                        msg: "Có lẽ chúng ta sắp thắng..."
+                    }, {
+                        type: "clown",
+                        icon: "🤡",
+                        val: "5.1 SOL",
+                        msg: "Tất cả biến mất rồi..."
+                    }, {
+                        type: "green",
+                        icon: "🟢",
+                        val: "1.4 SOL",
+                        msg: "Không thể nào..."
+                    }, {
+                        type: "green",
+                        icon: "🟢",
+                        val: "2.2 SOL",
+                        msg: "Tín hiệu này quá rõ..."
+                    }, {
+                        type: "clown",
+                        icon: "🤡",
+                        val: "0.5 SOL",
+                        msg: "Tôi đã sai hoàn toàn..."
+                    }, {
+                        type: "green",
+                        icon: "🟢",
+                        val: "3.1 SOL",
+                        msg: "Có vẻ đang pump..."
+                    }, {
+                        type: "clown",
+                        icon: "🤡",
+                        val: "2.7 SOL",
+                        msg: "Tại sao tôi lại làm vậy?"
+                    }, {
+                        type: "green",
+                        icon: "🟢",
+                        val: "0.9 SOL",
+                        msg: "Lần này chắc chắn rồi..."
+                    },
+
+                    {
+                        type: "green",
+                        icon: "🟢",
+                        val: "4.0 SOL",
+                        msg: "Tôi bắt đầu thấy hy vọng..."
+                    }, {
+                        type: "clown",
+                        icon: "🤡",
+                        val: "1.2 SOL",
+                        msg: "Hy vọng cuối cùng cũng hết..."
+                    }, {
+                        type: "green",
+                        icon: "🟢",
+                        val: "1.7 SOL",
+                        msg: "Chúng ta đang trở lại..."
+                    }, {
+                        type: "clown",
+                        icon: "🤡",
+                        val: "3.6 SOL",
+                        msg: "Không ai cảnh báo tôi cả..."
+                    }, {
+                        type: "green",
+                        icon: "🟢",
+                        val: "0.3 SOL",
+                        msg: "Tôi chỉ muốn thử vận may..."
+                    }, {
+                        type: "green",
+                        icon: "🟢",
+                        val: "2.6 SOL",
+                        msg: "Đây chính là lúc..."
+                    }, {
+                        type: "clown",
+                        icon: "🤡",
+                        val: "4.5 SOL",
+                        msg: "Tôi đã hiểu ra rồi..."
+                    }, {
+                        type: "green",
+                        icon: "🟢",
+                        val: "1.0 SOL",
+                        msg: "Không thể bỏ cuộc..."
+                    }, {
+                        type: "clown",
+                        icon: "🤡",
+                        val: "0.8 SOL",
+                        msg: "Chuyện gì vừa xảy ra vậy?"
+                    }, {
+                        type: "green",
+                        icon: "🟢",
+                        val: "3.4 SOL",
+                        msg: "Có ai đang theo dõi không?"
+                    },
+
+                    {
+                        type: "green",
+                        icon: "🟢",
+                        val: "1.5 SOL",
+                        msg: "Tôi cảm thấy may mắn..."
+                    }, {
+                        type: "clown",
+                        icon: "🤡",
+                        val: "2.0 SOL",
+                        msg: "May mắn đã bỏ tôi đi..."
+                    }, {
+                        type: "green",
+                        icon: "🟢",
+                        val: "0.6 SOL",
+                        msg: "Đừng để tôi hối hận..."
+                    }, {
+                        type: "clown",
+                        icon: "🤡",
+                        val: "3.9 SOL",
+                        msg: "Đây không phải kế hoạch..."
+                    }, {
+                        type: "green",
+                        icon: "🟢",
+                        val: "2.8 SOL",
+                        msg: "Mọi thứ vẫn còn cơ hội..."
+                    }, {
+                        type: "green",
+                        icon: "🟢",
+                        val: "1.9 SOL",
+                        msg: "Tôi sẽ giữ đến cuối..."
+                    }, {
+                        type: "clown",
+                        icon: "🤡",
+                        val: "1.1 SOL",
+                        msg: "Cuối cùng cũng hiểu..."
+                    }, {
+                        type: "green",
+                        icon: "🟢",
+                        val: "0.7 SOL",
+                        msg: "Chỉ cần thêm một chút..."
+                    }, {
+                        type: "clown",
+                        icon: "🤡",
+                        val: "6.0 SOL",
+                        msg: "Tôi không muốn nhớ chuyện này..."
+                    }, {
+                        type: "green",
+                        icon: "🟢",
+                        val: "3.2 SOL",
+                        msg: "Cảm giác này thật kỳ lạ..."
+                    },
+
+                    {
+                        type: "green",
+                        icon: "🟢",
+                        val: "1.3 SOL",
+                        msg: "Có điều gì đó sắp xảy ra..."
+                    }, {
+                        type: "clown",
+                        icon: "🤡",
+                        val: "2.6 SOL",
+                        msg: "Tôi đã nhìn thấy dấu hiệu..."
+                    }, {
+                        type: "green",
+                        icon: "🟢",
+                        val: "4.3 SOL",
+                        msg: "Đừng bán vội..."
+                    }, {
+                        type: "clown",
+                        icon: "🤡",
+                        val: "0.4 SOL",
+                        msg: "Giờ thì bán cũng chẳng kịp..."
+                    }, {
+                        type: "green",
+                        icon: "🟢",
+                        val: "1.8 SOL",
+                        msg: "Có vẻ cộng đồng đang trở lại..."
+                    }, {
+                        type: "green",
+                        icon: "🟢",
+                        val: "2.1 SOL",
+                        msg: "Tôi bắt đầu tin rồi..."
+                    }, {
+                        type: "clown",
+                        icon: "🤡",
+                        val: "3.5 SOL",
+                        msg: "Niềm tin thật mong manh..."
+                    }, {
+                        type: "green",
+                        icon: "🟢",
+                        val: "0.5 SOL",
+                        msg: "Chúng ta vẫn còn thời gian..."
+                    }, {
+                        type: "clown",
+                        icon: "🤡",
+                        val: "1.6 SOL",
+                        msg: "Thời gian đã hết..."
+                    }, {
+                        type: "green",
+                        icon: "🟢",
+                        val: "2.4 SOL",
+                        msg: "Tôi chưa từng thấy chuyện này..."
+                    },
+
+                    {
+                        type: "green",
+                        icon: "🟢",
+                        val: "3.8 SOL",
+                        msg: "Đây là tín hiệu cuối cùng..."
+                    }, {
+                        type: "clown",
+                        icon: "🤡",
+                        val: "2.9 SOL",
+                        msg: "Tín hiệu sai rồi..."
+                    }, {
+                        type: "green",
+                        icon: "🟢",
+                        val: "0.3 SOL",
+                        msg: "Tôi vẫn còn một ít..."
+                    }, {
+                        type: "clown",
+                        icon: "🤡",
+                        val: "4.1 SOL",
+                        msg: "Không còn gì để nói..."
+                    }, {
+                        type: "green",
+                        icon: "🟢",
+                        val: "1.2 SOL",
+                        msg: "Có ai thấy giống tôi không?"
+                    }, {
+                        type: "green",
+                        icon: "🟢",
+                        val: "2.7 SOL",
+                        msg: "Đây chắc chắn không phải ngẫu nhiên..."
+                    }, {
+                        type: "clown",
+                        icon: "🤡",
+                        val: "0.9 SOL",
+                        msg: "Tôi đã quá chủ quan..."
+                    }, {
+                        type: "green",
+                        icon: "🟢",
+                        val: "3.0 SOL",
+                        msg: "Chúng ta sắp đạt được rồi..."
+                    }, {
+                        type: "clown",
+                        icon: "🤡",
+                        val: "5.5 SOL",
+                        msg: "Tôi không muốn nhìn nữa..."
+                    }, {
+                        type: "green",
+                        icon: "🟢",
+                        val: "1.6 SOL",
+                        msg: "Có vẻ thị trường đang phản ứng..."
+                    },
+
+                    {
+                        type: "green",
+                        icon: "🟢",
+                        val: "0.8 SOL",
+                        msg: "Tôi sẽ chờ thêm..."
+                    }, {
+                        type: "clown",
+                        icon: "🤡",
+                        val: "2.3 SOL",
+                        msg: "Chờ đợi là sai lầm..."
+                    }, {
+                        type: "green",
+                        icon: "🟢",
+                        val: "4.6 SOL",
+                        msg: "Không thể tin được con số này..."
+                    }, {
+                        type: "clown",
+                        icon: "🤡",
+                        val: "1.4 SOL",
+                        msg: "Tôi vừa kiểm tra lại..."
+                    }, {
+                        type: "green",
+                        icon: "🟢",
+                        val: "2.0 SOL",
+                        msg: "Mọi người vẫn đang ở đây..."
+                    }, {
+                        type: "green",
+                        icon: "🟢",
+                        val: "1.1 SOL",
+                        msg: "Cộng đồng chưa bỏ cuộc..."
+                    }, {
+                        type: "clown",
+                        icon: "🤡",
+                        val: "3.2 SOL",
+                        msg: "Tôi nghĩ chúng ta đã xong..."
+                    }, {
+                        type: "green",
+                        icon: "🟢",
+                        val: "0.6 SOL",
+                        msg: "Một cơ hội nhỏ..."
+                    }, {
+                        type: "clown",
+                        icon: "🤡",
+                        val: "4.7 SOL",
+                        msg: "Một cái giá quá đắt..."
+                    }, {
+                        type: "green",
+                        icon: "🟢",
+                        val: "2.5 SOL",
+                        msg: "Tôi vẫn chưa từ bỏ..."
+                    },
+
+                    {
+                        type: "green",
+                        icon: "🟢",
+                        val: "1.7 SOL",
+                        msg: "Đây có thể là bước ngoặt..."
+                    }, {
+                        type: "clown",
+                        icon: "🤡",
+                        val: "0.2 SOL",
+                        msg: "Bước ngoặt theo hướng ngược lại..."
+                    }, {
+                        type: "green",
+                        icon: "🟢",
+                        val: "3.3 SOL",
+                        msg: "Có vẻ đang hồi phục..."
+                    }, {
+                        type: "clown",
+                        icon: "🤡",
+                        val: "2.8 SOL",
+                        msg: "Tôi không còn hy vọng..."
+                    }, {
+                        type: "green",
+                        icon: "🟢",
+                        val: "0.4 SOL",
+                        msg: "Thử lần cuối..."
+                    }, {
+                        type: "green",
+                        icon: "🟢",
+                        val: "2.9 SOL",
+                        msg: "Chuyện này thật điên rồ..."
+                    }, {
+                        type: "clown",
+                        icon: "🤡",
+                        val: "1.5 SOL",
+                        msg: "Tôi nên đi ngủ..."
+                    }, {
+                        type: "green",
+                        icon: "🟢",
+                        val: "4.2 SOL",
+                        msg: "Không ai có thể đoán được..."
+                    }, {
+                        type: "clown",
+                        icon: "🤡",
+                        val: "3.7 SOL",
+                        msg: "Tôi đã đoán sai..."
+                    }, {
+                        type: "green",
+                        icon: "🟢",
+                        val: "1.0 SOL",
+                        msg: "Mọi thứ vẫn chưa kết thúc..."
+                    },
+
+                    {
+                        type: "green",
+                        icon: "🟢",
+                        val: "2.2 SOL",
+                        msg: "Có lẽ lần này đúng..."
+                    }, {
+                        type: "clown",
+                        icon: "🤡",
+                        val: "0.7 SOL",
+                        msg: "Lại sai nữa rồi..."
+                    }, {
+                        type: "green",
+                        icon: "🟢",
+                        val: "3.6 SOL",
+                        msg: "Tôi bắt đầu thấy phấn khích..."
+                    }, {
+                        type: "clown",
+                        icon: "🤡",
+                        val: "4.4 SOL",
+                        msg: "Phấn khích quá sớm..."
+                    }, {
+                        type: "green",
+                        icon: "🟢",
+                        val: "1.4 SOL",
+                        msg: "Đừng làm tôi thất vọng..."
+                    }, {
+                        type: "green",
+                        icon: "🟢",
+                        val: "0.9 SOL",
+                        msg: "Có ai còn tin không?"
+                    }, {
+                        type: "clown",
+                        icon: "🤡",
+                        val: "2.1 SOL",
+                        msg: "Tôi đã biết câu trả lời..."
+                    }, {
+                        type: "green",
+                        icon: "🟢",
+                        val: "3.5 SOL",
+                        msg: "Đây là khoảnh khắc..."
+                    }, {
+                        type: "clown",
+                        icon: "🤡",
+                        val: "1.8 SOL",
+                        msg: "Khoảnh khắc đáng quên..."
+                    }, {
+                        type: "green",
+                        icon: "🟢",
+                        val: "0.5 SOL",
+                        msg: "Tôi vẫn còn ở đây..."
+                    },
+
+                    {
+                        type: "green",
+                        icon: "🟢",
+                        val: "2.6 SOL",
+                        msg: "Chúng ta sẽ vượt qua..."
+                    }, {
+                        type: "clown",
+                        icon: "🤡",
+                        val: "3.0 SOL",
+                        msg: "Tôi không chắc nữa..."
+                    }, {
+                        type: "green",
+                        icon: "🟢",
+                        val: "1.9 SOL",
+                        msg: "Có gì đó đang thay đổi..."
+                    }, {
+                        type: "clown",
+                        icon: "🤡",
+                        val: "0.3 SOL",
+                        msg: "Tôi không muốn mở ví..."
+                    }, {
+                        type: "green",
+                        icon: "🟢",
+                        val: "4.0 SOL",
+                        msg: "Đây là lần đặt cược lớn..."
+                    }, {
+                        type: "clown",
+                        icon: "🤡",
+                        val: "5.2 SOL",
+                        msg: "Có lẽ tôi đã quá tham..."
+                    }, {
+                        type: "green",
+                        icon: "🟢",
+                        val: "1.2 SOL",
+                        msg: "Tín hiệu đang sáng lên..."
+                    }, {
+                        type: "clown",
+                        icon: "🤡",
+                        val: "2.5 SOL",
+                        msg: "Rồi lại tắt..."
+                    }, {
+                        type: "green",
+                        icon: "🟢",
+                        val: "3.1 SOL",
+                        msg: "Tôi sẽ không bỏ cuộc..."
+                    }, {
+                        type: "clown",
+                        icon: "🤡",
+                        val: "1.0 SOL",
+                        msg: "Tôi đầu hàng..."
+                    },
+
+                    {
+                        type: "green",
+                        icon: "🟢",
+                        val: "0.7 SOL",
+                        msg: "Một chút hy vọng..."
+                    }, {
+                        type: "green",
+                        icon: "🟢",
+                        val: "2.4 SOL",
+                        msg: "Có vẻ mọi người đang quay lại..."
+                    }, {
+                        type: "clown",
+                        icon: "🤡",
+                        val: "3.9 SOL",
+                        msg: "Không, họ lại đi rồi..."
+                    }, {
+                        type: "green",
+                        icon: "🟢",
+                        val: "1.6 SOL",
+                        msg: "Đây là cơ hội cuối..."
+                    }, {
+                        type: "clown",
+                        icon: "🤡",
+                        val: "4.3 SOL",
+                        msg: "Tôi đã mất niềm tin..."
+                    }, {
+                        type: "green",
+                        icon: "🟢",
+                        val: "2.8 SOL",
+                        msg: "Nhưng tôi vẫn ở đây..."
+                    }, {
+                        type: "clown",
+                        icon: "🤡",
+                        val: "0.6 SOL",
+                        msg: "Đáng lẽ tôi nên dừng lại..."
+                    }, {
+                        type: "green",
+                        icon: "🟢",
+                        val: "3.4 SOL",
+                        msg: "Chúng ta còn một cơ hội..."
+                    }, {
+                        type: "clown",
+                        icon: "🤡",
+                        val: "2.2 SOL",
+                        msg: "Cơ hội đã biến mất..."
+                    }, {
+                        type: "green",
+                        icon: "🟢",
+                        val: "1.3 SOL",
+                        msg: "Tôi sẽ thử thêm lần nữa..."
+                    }
+                ];
+
+            function addFeedLine(item) {
+                const line = document.createElement("div");
+                line.className = "news-feed-line";
+                const isClown = item.type === "clown";
+                line.innerHTML = `
+                    <span>${item.icon}</span>
+                    <span class="feed-badge ${isClown ? 'clown' : ''}">${item.val}</span>
+                    <span>–</span>
+                    <span class="feed-msg">${item.msg}</span>
+                `;
+                newsFeedList.appendChild(line);
+                newsFeedList.scrollTop = newsFeedList.scrollHeight;
+            }
+
+            // Initial population
+            sampleLogs.forEach(addFeedLine);
+
+            // Auto push new live feed
+            setInterval(() => {
+                const randomItem = sampleLogs[Math.floor(Math.random() * sampleLogs.length)];
+                addFeedLine(randomItem);
+                if (newsFeedList.children.length > 25) {
+                    newsFeedList.removeChild(newsFeedList.firstChild);
+                }
+            }, 2200);
+                window.addEventListener("trollpump:config-ready", startUiBoot);
+                window.addEventListener("trollpump:core-ready", startUiBoot);
+
+                if (document.readyState === "loading") {
+                    document.addEventListener("DOMContentLoaded", startUiBoot, {
+                        once: true
+                    });
+                } else {
+                    startUiBoot();
+                }
+
+                window.addEventListener("load", startUiBoot, {
+                    once: true
+                });
+                window.addEventListener("pageshow", startUiBoot);
+
+                setInterval(function() {
+                    const app = window.TrollPumpApp = window.TrollPumpApp || {};
+                    const stale = !app.lastRuntimeTickAt || Date.now() - app.lastRuntimeTickAt > 3500;
+                    if (!app.uiReady || stale) {
+                        app.uiReady = false;
+                        startUiBoot();
+                    }
+                }, 2500);
+            })();
+    </script>
+</body>
+
+</html>
